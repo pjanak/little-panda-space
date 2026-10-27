@@ -1,0 +1,925 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
+<title>Little Panda Space</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Andika:wght@400;700&family=Baloo+2:wght@600;800&display=swap">
+<style>
+/* Layout: one-column phone app, same family as Little Panda Maths and Science. Single night-sky look by choice: navy sky with stars, chunky cards in lighter navy, bright planet colours. Sticky top bar, home grid of eight tiles in two groups, each game one screen: prompt card, picture or diagram, big answer buttons. */
+:root{
+  --bg:#141A3D; --card:#252E66; --card-2:#313B7E; --shadow:#0B0F2B; --night:#0A0E2A;
+  --text:#F6F4FF; --text-soft:#B8B5E3; --scrim:rgba(5,7,25,.7); --starlight:rgba(255,255,255,.75);
+  --gold:#FFC93C; --gold-deep:#C98F00; --gold-tint:#4A4250;
+  --jade:#1FC79B; --jade-deep:#0F8E6E; --jade-tint:#1D4A5A; --jade-light:#BFF5E4;
+  --blue:#4C9BFF; --blue-deep:#2665C7; --blue-tint:#233B7C;
+  --red:#FF5A4E; --red-deep:#C02F25; --red-tint:#4A2A55;
+  --plum:#9B73FF; --plum-deep:#6A45D1; --plum-tint:#3A2E78;
+  --panda-ink:#2A2440; --panda-white:#FFFFFF; --cheek:#FF8FB5;
+  --display:"Baloo 2","Arial Rounded MT Bold","Trebuchet MS",system-ui,sans-serif;
+  --body:"Andika","Comic Sans MS","Trebuchet MS",system-ui,sans-serif;
+  --emoji:"Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif;
+  color-scheme:dark;
+}
+html,body{height:100%}
+body{
+  background-color:var(--bg);
+  background-image:
+    radial-gradient(1.5px 1.5px at 18px 24px,var(--starlight) 50%,transparent 51%),
+    radial-gradient(1px 1px at 90px 70px,var(--starlight) 50%,transparent 51%),
+    radial-gradient(2px 2px at 140px 130px,var(--starlight) 50%,transparent 51%),
+    radial-gradient(1px 1px at 40px 150px,var(--starlight) 50%,transparent 51%),
+    radial-gradient(1.5px 1.5px at 120px 18px,var(--starlight) 50%,transparent 51%);
+  background-size:170px 170px;
+  color:var(--text); font-family:var(--body); font-size:18px; line-height:1.45;
+  -webkit-tap-highlight-color:transparent;
+}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
+button{font:inherit;color:inherit;touch-action:manipulation;cursor:pointer}
+button:focus-visible,summary:focus-visible{outline:4px solid var(--gold);outline-offset:3px}
+.app{
+  max-width:560px; margin:0 auto; min-height:100%;
+  display:flex; flex-direction:column;
+  padding-left:max(16px,env(safe-area-inset-left,0px));
+  padding-right:max(16px,env(safe-area-inset-right,0px));
+}
+
+/* Top bar */
+.bar{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;display:flex;align-items:center;gap:10px;padding-block:10px;background:var(--bg)}
+.brand{flex:1;display:flex;align-items:center;gap:8px;min-width:0;font-family:var(--display);font-weight:800;font-size:20px;line-height:1}
+.brand svg{width:40px;height:40px;flex:none}
+.in-game .brand-name,.timing .brand-name{display:none}
+.icon-btn{width:48px;height:48px;border-radius:50%;border:0;background:var(--card);box-shadow:0 4px 0 var(--shadow);display:grid;place-items:center;flex:none}
+.icon-btn svg{width:26px;height:26px}
+.stars{display:flex;align-items:center;gap:4px;background:var(--gold);color:var(--panda-ink);border-radius:999px;padding:6px 14px 6px 10px;font-family:var(--display);font-weight:800;font-size:22px;line-height:1;box-shadow:0 4px 0 var(--gold-deep);flex:none}
+.stars svg{width:24px;height:24px}
+.stars svg path{fill:var(--panda-ink)}
+.stars.bump{animation:bump .5s cubic-bezier(.3,1.8,.5,1)}
+.timer-pill{display:flex;align-items:center;gap:4px;flex:none;background:var(--card);color:var(--text);border-radius:999px;padding:6px 11px 6px 8px;font-family:var(--display);font-weight:800;font-size:20px;line-height:1;font-variant-numeric:tabular-nums;box-shadow:0 4px 0 var(--shadow)}
+.timer-pill svg{width:22px;height:22px}
+.timer-pill.low{background:var(--red);box-shadow:0 4px 0 var(--red-deep);animation:bump 1s ease-in-out infinite}
+
+main{flex:1;padding-block:6px 40px}
+.screen{display:flex;flex-direction:column;gap:16px}
+
+/* Home */
+.hello{display:flex;align-items:center;gap:12px}
+.hello .panda-btn{border:0;background:none;padding:0;width:104px;height:104px;flex:none}
+.hello .panda-btn svg{width:100%;height:100%}
+.panda-btn.wiggle svg{animation:wiggle .6s ease}
+.bubble{position:relative;background:var(--card);border-radius:22px;padding:12px 16px;font-size:19px;box-shadow:0 5px 0 var(--shadow);min-width:0}
+.bubble::before{content:"";position:absolute;left:-10px;top:50%;margin-top:-10px;border:10px solid transparent;border-right-color:var(--card);border-left:0}
+.bubble b{font-family:var(--display);font-size:22px;display:block;line-height:1.1;color:var(--gold)}
+.levels{display:flex;align-items:center;gap:6px;background:var(--card);border-radius:22px;padding:6px;box-shadow:0 5px 0 var(--shadow)}
+.lv-label{font-family:var(--display);font-weight:800;font-size:17px;line-height:1.1;padding-inline:8px 4px;flex:none}
+.lv{flex:1;min-width:0;border:0;border-radius:16px;padding:6px 4px;background:transparent;color:var(--text-soft);font-family:var(--display);font-weight:800;font-size:18px;line-height:1.05;display:flex;flex-direction:column;align-items:center}
+.lv i{font-style:normal;font-size:13px;color:var(--gold);letter-spacing:1px}
+.lv[aria-pressed="true"]{color:var(--text)}
+.lv[data-level="easy"][aria-pressed="true"]{background:var(--jade-deep)}
+.lv[data-level="medium"][aria-pressed="true"]{background:var(--blue-deep)}
+.lv[data-level="hard"][aria-pressed="true"]{background:var(--red-deep)}
+.section-h{margin:4px 0 -4px;font-family:var(--display);font-weight:800;font-size:21px;line-height:1.1}
+.tiles{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.tile{
+  --c:var(--blue);--cs:var(--blue-tint);--cd:var(--blue-deep);
+  border:0;border-radius:28px;padding:14px 14px 16px;text-align:left;
+  background:var(--cs);box-shadow:0 7px 0 var(--shadow);
+  display:flex;flex-direction:column;gap:4px;min-width:0;
+  transition:transform .12s,box-shadow .12s;
+}
+.tile:active{transform:translateY(5px);box-shadow:0 2px 0 var(--shadow)}
+.tile.jade{--c:var(--jade);--cs:var(--jade-tint);--cd:var(--jade-deep)}
+.tile.red{--c:var(--red);--cs:var(--red-tint);--cd:var(--red-deep)}
+.tile.gold{--c:var(--gold);--cs:var(--gold-tint);--cd:var(--gold-deep)}
+.tile.plum{--c:var(--plum);--cs:var(--plum-tint);--cd:var(--plum-deep)}
+.topic{display:inline-flex;align-items:center;align-self:flex-start;background:var(--cd,var(--blue-deep));color:var(--text);font-family:var(--display);font-weight:800;font-size:15px;letter-spacing:.03em;border-radius:10px;padding:3px 9px;line-height:1.3;white-space:nowrap}
+.tile .art{height:62px;display:flex;align-items:center;justify-content:center;gap:6px;margin-block:6px;font-family:var(--emoji);font-size:38px;line-height:1}
+.tile h3{margin:0;font-family:var(--display);font-weight:800;font-size:23px;line-height:1.05;text-wrap:balance}
+.tile p{margin:0;font-size:15px;line-height:1.3;color:var(--text-soft)}
+
+.grown{background:var(--card);border-radius:20px;padding:4px 16px;font-size:16px;color:var(--text-soft)}
+.grown summary{font-family:var(--display);font-weight:800;font-size:18px;color:var(--text);padding-block:10px;cursor:pointer}
+.grown p,.grown li{max-width:62ch}
+.grown ul{padding-left:20px;margin-top:0}
+.grown li{margin-bottom:8px}
+.grown b{color:var(--text)}
+.set-group{display:flex;flex-direction:column;gap:8px;padding-bottom:14px}
+.set-group+.set-group{border-top:2px solid var(--card-2);padding-top:14px}
+.set-group h4{margin:0;font-family:var(--display);font-weight:800;font-size:18px;color:var(--text)}
+.set-note{margin:0;font-size:16px}
+.chips{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+.chip-btn{border:0;border-radius:999px;padding:9px 16px;background:var(--card-2);color:var(--text);font-family:var(--display);font-weight:800;font-size:17px;line-height:1}
+.chip-btn[aria-pressed="true"]{background:var(--plum-deep)}
+.chip-btn.danger{background:var(--red-deep)}
+.chip-btn:disabled{opacity:.4;cursor:default}
+
+/* Planets, drawn in CSS so every body has a picture */
+.planet{display:inline-block;flex:none;position:relative;width:var(--s,1em);height:var(--s,1em);border-radius:50%;box-shadow:inset -.16em -.12em .28em rgba(0,0,0,.45);vertical-align:middle}
+.p-mercury{background:radial-gradient(circle at 62% 60%,#8a837e 0 9%,transparent 10%),radial-gradient(circle at 35% 35%,#d6d0ca,#8c8580)}
+.p-venus{background:radial-gradient(circle at 35% 35%,#fbecbf,#d9a85b)}
+.p-earth{background:radial-gradient(circle at 30% 42%,#43c46f 0 17%,transparent 18%),radial-gradient(circle at 66% 66%,#43c46f 0 14%,transparent 15%),radial-gradient(circle at 60% 25%,#43c46f 0 9%,transparent 10%),radial-gradient(circle at 35% 35%,#86d6ff,#1f6fd1)}
+.p-mars{background:radial-gradient(circle at 35% 35%,#ff9a6c,#c1440e)}
+.p-jupiter{background:radial-gradient(ellipse at 62% 64%,#c6452f 0 9%,transparent 10%),repeating-linear-gradient(0deg,#e9c8a2 0 12%,#c68b5a 12% 20%,#f3e0c6 20% 28%)}
+.p-saturn{background:radial-gradient(circle at 35% 35%,#f8e7b4,#c9a65a)}
+.p-saturn::after{content:"";position:absolute;left:-38%;top:38%;width:176%;height:24%;border:.07em solid #e6cf91;border-radius:50%;transform:rotate(-16deg);box-sizing:border-box}
+.p-uranus{background:radial-gradient(circle at 35% 35%,#d2f7f8,#5fc6d1)}
+.p-neptune{background:radial-gradient(circle at 35% 35%,#8aa2ff,#2a3fbf)}
+.p-sun{background:radial-gradient(circle at 40% 40%,#fff6b8,#ffc93c 55%,#ff8a00);box-shadow:0 0 .25em #ffcf4d,0 0 .5em rgba(255,170,0,.5)}
+.p-moon{background:radial-gradient(circle at 60% 35%,#a9a9b3 0 8%,transparent 9%),radial-gradient(circle at 35% 65%,#a9a9b3 0 11%,transparent 12%),radial-gradient(circle at 35% 35%,#f4f4f6,#b8b8c2)}
+
+/* Game */
+.game-head{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px}
+.game-head h2{margin:0;font-family:var(--display);font-weight:800;font-size:26px;line-height:1}
+.prompt{display:flex;align-items:center;gap:12px;background:var(--card);border-radius:24px;padding:12px 14px;box-shadow:0 5px 0 var(--shadow)}
+.say-btn{width:56px;height:56px;border-radius:50%;border:0;background:var(--jade-deep);box-shadow:0 4px 0 var(--shadow);display:grid;place-items:center;flex:none}
+.say-btn svg{width:30px;height:30px}
+.say-btn:active{transform:translateY(3px);box-shadow:0 1px 0 var(--shadow)}
+.prompt p{margin:0;font-family:var(--display);font-weight:600;font-size:21px;line-height:1.2;min-width:0;text-wrap:balance}
+.stage{display:flex;flex-direction:column;align-items:center;gap:14px;min-height:150px}
+.answers{display:grid;gap:12px;grid-template-columns:repeat(var(--cols,1),minmax(0,1fr))}
+.opt{min-height:84px;border:0;border-radius:24px;padding:10px 8px;background:var(--card);color:var(--text);box-shadow:0 6px 0 var(--shadow);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;transition:transform .1s,box-shadow .1s,opacity .2s;min-width:0}
+.opt .oi{font-family:var(--emoji);font-size:40px;line-height:1.1;display:flex;align-items:center;justify-content:center;min-height:1.1em}
+.opt .ol{font-family:var(--display);font-weight:800;font-size:20px;line-height:1.1;text-align:center}
+.answers.list .opt{flex-direction:row;justify-content:flex-start;gap:12px;min-height:68px;padding:10px 18px;text-align:left}
+.answers.list .opt .ol{text-align:left;font-size:19px;font-weight:600}
+.answers.two .opt:last-child:nth-child(odd){grid-column:1/-1}
+.opt:active{transform:translateY(4px);box-shadow:0 2px 0 var(--shadow)}
+.opt.wrong{animation:shake .4s;opacity:.35}
+.opt.right{background:var(--jade);color:var(--night);box-shadow:0 6px 0 var(--jade-deep);animation:bump .5s cubic-bezier(.3,1.8,.5,1)}
+.next{grid-column:1/-1;height:80px;border:0;border-radius:26px;background:var(--jade);color:var(--night);font-family:var(--display);font-weight:800;font-size:32px;box-shadow:0 7px 0 var(--jade-deep);animation:rise .35s ease-out}
+.next:active{transform:translateY(5px);box-shadow:0 2px 0 var(--jade-deep)}
+.big-btn{grid-column:1/-1;height:80px;border:0;border-radius:26px;background:var(--blue);color:var(--text);font-family:var(--display);font-weight:800;font-size:28px;box-shadow:0 7px 0 var(--blue-deep)}
+.big-btn:active{transform:translateY(5px);box-shadow:0 2px 0 var(--blue-deep)}
+.pic-card{display:flex;flex-direction:column;align-items:center;gap:6px;background:var(--card);border-radius:32px;padding:16px 34px 12px;box-shadow:0 6px 0 var(--shadow);animation:pop .4s cubic-bezier(.3,1.7,.5,1)}
+.pic{font-family:var(--emoji);font-size:104px;line-height:1.1;display:flex;align-items:center;justify-content:center;min-height:1.1em}
+.pic-name{font-family:var(--display);font-weight:800;font-size:24px;line-height:1.1}
+.fact{margin:0;max-width:340px;text-align:center;background:var(--jade-tint);color:var(--jade-light);border-radius:18px;padding:10px 16px;font-family:var(--display);font-weight:600;font-size:19px;line-height:1.25;animation:rise .4s ease-out}
+.cap{margin:0;font-size:16px;color:var(--text-soft);text-align:center}
+.pair{display:flex;gap:28px;align-items:center;justify-content:center;font-size:96px}
+
+/* Put-in-order games */
+.anchor{display:flex;align-items:center;gap:8px;font-family:var(--display);font-weight:800;font-size:18px;color:var(--gold)}
+.slots{display:flex;flex-wrap:wrap;justify-content:center;gap:8px;max-width:340px}
+.slot{position:relative;width:72px;height:86px;border-radius:20px;border:3px dashed var(--text-soft);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;box-sizing:border-box;font-family:var(--emoji);font-size:36px;line-height:1}
+.slot .n{position:absolute;top:3px;left:8px;font-family:var(--display);font-weight:800;font-size:14px;color:var(--text-soft)}
+.slot.filled{border:3px solid var(--jade);background:var(--card);animation:pop .35s cubic-bezier(.3,1.7,.5,1)}
+.slot .cl,.card .cl{font-family:var(--display);font-weight:800;font-size:14px;line-height:1.1;color:var(--text)}
+.cards{display:flex;flex-wrap:wrap;justify-content:center;gap:10px;max-width:360px}
+.card{width:80px;height:94px;border:0;border-radius:20px;background:var(--card-2);box-shadow:0 6px 0 var(--shadow);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;font-family:var(--emoji);font-size:40px;line-height:1}
+.card.wrong{animation:shake .4s}
+.card.used{visibility:hidden}
+
+/* Day and night: Bao rides on a layer above the night shadow so they stay visible */
+.dn{width:min(100%,340px);height:auto}
+#earthSpin,#baoSpin{transform-origin:210px 105px;transform-box:view-box;transition:transform .7s cubic-bezier(.4,1.3,.5,1)}
+
+/* Star pictures */
+.sky{width:min(100%,340px);height:auto;border-radius:24px;background:var(--night);box-shadow:0 6px 0 var(--shadow)}
+.sky .st{fill:var(--panda-white)}
+.sky .halo{fill:var(--gold);opacity:0}
+.sky .hit{fill:transparent;cursor:pointer}
+.sky .next-star .halo{opacity:.45;animation:twinkle 1s ease-in-out infinite;transform-box:fill-box;transform-origin:center}
+.sky .ln{stroke:var(--gold);stroke-width:3;stroke-linecap:round}
+.sky .num{fill:var(--text-soft);font-family:var(--display);font-weight:800;font-size:15px}
+
+/* Overlays */
+.cheer{position:fixed;inset:0;z-index:40;background:var(--scrim);display:grid;place-items:center;padding:24px max(16px,env(safe-area-inset-right,0px)) 24px max(16px,env(safe-area-inset-left,0px))}
+.cheer-card{background:var(--card);border-radius:32px;padding:20px 24px 24px;text-align:center;max-width:340px;width:100%;box-shadow:0 10px 0 var(--shadow);animation:pop .5s cubic-bezier(.3,1.7,.5,1)}
+.cheer-card svg.panda{width:140px;height:140px;animation:hop 1s ease-in-out infinite}
+.cheer-card h2{margin:4px 0;font-family:var(--display);font-weight:800;font-size:38px;color:var(--gold);line-height:1}
+.cheer-card p{margin:0 0 16px;font-size:19px}
+.cheer-card button{width:100%;height:68px;border:0;border-radius:22px;background:var(--gold);color:var(--panda-ink);box-shadow:0 6px 0 var(--gold-deep);font-family:var(--display);font-weight:800;font-size:26px}
+.cheer-card .hold{position:relative;overflow:hidden;margin-top:12px;height:58px;background:var(--card-2);color:var(--text);box-shadow:0 5px 0 var(--shadow);font-size:17px;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
+.cheer-card .hold::before{content:"";position:absolute;inset:0 auto 0 0;width:0;background:var(--jade-deep)}
+.cheer-card .hold.holding::before{width:100%;transition:width 2s linear}
+.cheer-card .hold span{position:relative}
+#confetti{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:50}
+
+.pk{fill:var(--panda-ink)} .pw{fill:var(--panda-white)} .pc{fill:var(--cheek);opacity:.75}
+.ps{fill:none;stroke:var(--panda-ink);stroke-width:3.5;stroke-linecap:round}
+
+@keyframes pop{0%{transform:scale(.2)}100%{transform:scale(1)}}
+@keyframes bump{0%{transform:scale(1)}40%{transform:scale(1.18)}100%{transform:scale(1)}}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-8px)}50%{transform:translateX(8px)}75%{transform:translateX(-5px)}}
+@keyframes rise{from{transform:translateY(14px);opacity:.3}to{transform:none;opacity:1}}
+@keyframes wiggle{0%,100%{transform:rotate(0)}25%{transform:rotate(-10deg)}75%{transform:rotate(10deg)}}
+@keyframes hop{0%,100%{transform:translateY(0)}50%{transform:translateY(-12px)}}
+@keyframes twinkle{0%,100%{transform:scale(.8)}50%{transform:scale(1.3)}}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
+@media (max-width:350px){.tiles{grid-template-columns:1fr}.slot{width:64px}.card{width:72px}}
+</style>
+</head>
+<body>
+
+<div class="app">
+  <header class="bar">
+    <button class="icon-btn" id="homeBtn" aria-label="Back to all games" hidden>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg>
+    </button>
+    <div class="brand"><span data-panda></span><span class="brand-name">Little Panda Space</span></div>
+    <div class="timer-pill" id="timerPill" aria-label="Play time left" hidden>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="13.5" r="7.5"/><path d="M12 10v3.5l2.5 1.5M9.5 2.5h5"/></svg>
+      <span id="timerText">0:00</span>
+    </div>
+    <div class="stars" id="starBox" aria-label="Stars earned">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5l2.9 6 6.6.8-4.9 4.6 1.3 6.6L12 17.2l-5.9 3.3 1.3-6.6L2.5 9.3l6.6-.8z"/></svg>
+      <span id="starCount">0</span>
+    </div>
+    <button class="icon-btn" id="soundBtn" aria-label="Turn sound off">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9h4l5-4v14l-5-4H4z" fill="currentColor"/><path id="soundWaves" d="M16.5 8.5a5 5 0 010 7M19 6a8.5 8.5 0 010 12"/><path id="soundX" d="M17 9l5 6M22 9l-5 6" hidden/></svg>
+    </button>
+  </header>
+
+  <main>
+    <section class="screen" id="home">
+      <div class="hello">
+        <button class="panda-btn" id="pandaBtn" aria-label="Say hello to Bao the panda"><span data-panda></span></button>
+        <div class="bubble"><b>Hi, I'm Bao!</b>Let's blast off and explore space together!</div>
+      </div>
+      <div class="levels" role="group" aria-label="How tricky"><span class="lv-label">How<br>tricky?</span><button class="lv" data-level="easy" aria-pressed="true">Easy<i>★</i></button><button class="lv" data-level="medium" aria-pressed="false">Medium<i>★★</i></button><button class="lv" data-level="hard" aria-pressed="false">Hard<i>★★★</i></button></div>
+
+      <h2 class="section-h">Earth, Sun and Moon</h2>
+      <div class="tiles">
+        <button class="tile" data-game="daynight">
+          <span class="topic">Earth spins</span>
+          <span class="art" aria-hidden="true"><span class="planet p-sun" style="--s:44px"></span><span class="planet p-earth" style="--s:50px"></span></span>
+          <h3>Day and Night</h3>
+          <p>Spin the Earth to bring the night</p>
+        </button>
+        <button class="tile plum" data-game="moon">
+          <span class="topic">The Moon</span>
+          <span class="art" aria-hidden="true">🌒🌓🌕</span>
+          <h3>Moon Shapes</h3>
+          <p>Crescent, half and full moon</p>
+        </button>
+        <button class="tile gold" data-game="sun">
+          <span class="topic">Light</span>
+          <span class="art" aria-hidden="true"><span class="planet p-sun" style="--s:54px"></span></span>
+          <h3>Our Star, the Sun</h3>
+          <p>Light, heat and staying safe</p>
+        </button>
+        <button class="tile red" data-game="explore">
+          <span class="topic">Space travel</span>
+          <span class="art" aria-hidden="true">🚀🧑‍🚀🛰️</span>
+          <h3>Space Explorers</h3>
+          <p>Rockets, astronauts and rovers</p>
+        </button>
+      </div>
+
+      <h2 class="section-h">Planets and stars</h2>
+      <div class="tiles">
+        <button class="tile jade" data-game="planets">
+          <span class="topic">Planets</span>
+          <span class="art" aria-hidden="true"><span class="planet p-mars" style="--s:34px"></span><span class="planet p-saturn" style="--s:42px"></span><span class="planet p-neptune" style="--s:32px"></span></span>
+          <h3>Meet the Planets</h3>
+          <p>Name the eight planets</p>
+        </button>
+        <button class="tile" data-game="lineup">
+          <span class="topic">Solar System</span>
+          <span class="art" aria-hidden="true"><span class="planet p-sun" style="--s:40px"></span><span class="planet p-mercury" style="--s:14px"></span><span class="planet p-venus" style="--s:20px"></span><span class="planet p-earth" style="--s:22px"></span><span class="planet p-mars" style="--s:16px"></span></span>
+          <h3>Planet Line-up</h3>
+          <p>Put the planets in order from the Sun</p>
+        </button>
+        <button class="tile plum" data-game="sizes">
+          <span class="topic">Sizes</span>
+          <span class="art" aria-hidden="true"><span class="planet p-moon" style="--s:16px"></span><span class="planet p-earth" style="--s:28px"></span><span class="planet p-jupiter" style="--s:52px"></span></span>
+          <h3>Big and Small</h3>
+          <p>Which is really bigger?</p>
+        </button>
+        <button class="tile gold" data-game="stars">
+          <span class="topic">Stars</span>
+          <span class="art" aria-hidden="true">✨⭐✨</span>
+          <h3>Star Pictures</h3>
+          <p>Join the stars to make constellations</p>
+        </button>
+      </div>
+
+      <details class="grown" id="settings">
+        <summary>Grown-up settings: play timer and stars</summary>
+        <div class="set-group">
+          <h4>Play timer</h4>
+          <p class="set-note">Pick how long to play. A countdown shows at the top, and Bao says when time is up.</p>
+          <div class="chips" id="timerChips" role="group" aria-label="Play time">
+            <button class="chip-btn" data-min="0" aria-pressed="true">Off</button>
+            <button class="chip-btn" data-min="5" aria-pressed="false">5 min</button>
+            <button class="chip-btn" data-min="10" aria-pressed="false">10 min</button>
+            <button class="chip-btn" data-min="15" aria-pressed="false">15 min</button>
+            <button class="chip-btn" data-min="20" aria-pressed="false">20 min</button>
+          </div>
+          <p class="set-note" id="timerStatus" hidden></p>
+        </div>
+        <div class="set-group">
+          <h4>Stars</h4>
+          <p class="set-note" id="starNote">No stars yet.</p>
+          <div class="chips" id="resetRow"><button class="chip-btn danger" id="resetBtn">Reset stars to 0</button></div>
+          <div class="chips" id="confirmRow" hidden><span class="set-note" id="confirmText"></span><button class="chip-btn danger" id="resetYes">Yes, reset</button><button class="chip-btn" id="resetNo">Cancel</button></div>
+        </div>
+      </details>
+
+      <details class="grown">
+        <summary>For grown-ups: what this covers</summary>
+        <p>Space isn't in the Key Stage 1 programme of study for England; "Earth and space" is taught in Year 5. These games introduce the big ideas early, for ages 5 to 7, and link to the KS1 topics on seasons, day length and light. Every question is read aloud, including the answer choices.</p>
+        <ul>
+          <li><b>Day and Night:</b> the Earth spins, so the side facing the Sun has day. Medium lets children spin the Earth themselves; Hard covers days, years and sunrise.</li>
+          <li><b>Moon Shapes:</b> naming the Moon's phases, then putting them in order from new moon to full moon. The Moon reflects sunlight rather than making its own.</li>
+          <li><b>Our Star, the Sun:</b> which things make their own light, then facts about the Sun and sun safety.</li>
+          <li><b>Space Explorers:</b> rockets, astronauts, satellites and telescopes, then famous firsts like Yuri Gagarin, Neil Armstrong and British astronaut Tim Peake.</li>
+          <li><b>Meet the Planets:</b> recognising each planet from a picture or a clue, then planet facts.</li>
+          <li><b>Planet Line-up:</b> the order of the planets from the Sun, building up to all eight. A rhyme helps: "My Very Easy Method Just Speeds Up Naming".</li>
+          <li><b>Big and Small:</b> things in space are drawn the same size here, so children have to know which is really bigger.</li>
+          <li><b>Star Pictures:</b> join the stars to draw constellations such as the Plough and Orion, then recognise them by shape.</li>
+        </ul>
+        <p>Stars are saved on this device only. There are no wrong-answer penalties: a wrong tap just fades that choice.</p>
+      </details>
+    </section>
+
+    <section class="screen" id="game" hidden>
+      <div class="game-head"><span class="topic" id="gTopic"></span><h2 id="gTitle"></h2></div>
+      <div class="levels" role="group" aria-label="How tricky"><span class="lv-label">How<br>tricky?</span><button class="lv" data-level="easy" aria-pressed="true">Easy<i>★</i></button><button class="lv" data-level="medium" aria-pressed="false">Medium<i>★★</i></button><button class="lv" data-level="hard" aria-pressed="false">Hard<i>★★★</i></button></div>
+      <div class="prompt">
+        <button class="say-btn" id="sayBtn" aria-label="Read the question aloud">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9h4l5-4v14l-5-4H4z" fill="#fff"/><path d="M16.5 8.5a5 5 0 010 7M19 6a8.5 8.5 0 010 12"/></svg>
+        </button>
+        <p id="promptText" aria-live="polite"></p>
+      </div>
+      <div class="stage" id="stage"></div>
+      <div class="answers" id="answers"></div>
+      <details class="grown"><summary>How this works</summary><p id="gTip"></p></details>
+    </section>
+  </main>
+</div>
+
+<div class="cheer" id="cheer" hidden>
+  <div class="cheer-card" role="dialog" aria-labelledby="cheerTitle">
+    <span data-panda></span>
+    <h2 id="cheerTitle">Superstar!</h2>
+    <p id="cheerText"></p>
+    <button id="cheerBtn">Keep exploring</button>
+  </div>
+</div>
+<div class="cheer" id="timesUp" hidden>
+  <div class="cheer-card" role="dialog" aria-labelledby="tuTitle">
+    <span data-panda></span>
+    <h2 id="tuTitle">Time's up!</h2>
+    <p id="tuText"></p>
+    <button id="tuDone">All done</button>
+    <button class="hold" id="tuMore"><span>Grown-ups: hold for 5 more minutes</span></button>
+  </div>
+</div>
+<canvas id="confetti" aria-hidden="true"></canvas>
+
+<script>
+(function(){
+const $=s=>document.querySelector(s);
+const PANDA='<svg class="panda" viewBox="0 0 120 120" aria-hidden="true"><circle class="pk" cx="27" cy="28" r="17"/><circle class="pk" cx="93" cy="28" r="17"/><circle class="pw" cx="60" cy="64" r="45" style="stroke:var(--panda-ink);stroke-width:4"/><ellipse class="pk" cx="41" cy="60" rx="12" ry="15" transform="rotate(-22 41 60)"/><ellipse class="pk" cx="79" cy="60" rx="12" ry="15" transform="rotate(22 79 60)"/><circle class="pw" cx="43" cy="58" r="4.5"/><circle class="pw" cx="77" cy="58" r="4.5"/><circle class="pc" cx="31" cy="80" r="7"/><circle class="pc" cx="89" cy="80" r="7"/><ellipse class="pk" cx="60" cy="76" rx="7" ry="5"/><path class="ps" d="M51 85q9 9 18 0"/></svg>';
+document.querySelectorAll('[data-panda]').forEach(el=>el.outerHTML=PANDA);
+
+/* ---------- state ---------- */
+let stars=0, soundOn=true, level='easy';
+try{stars=parseInt(localStorage.getItem('lpspace-stars'),10)||0}catch(e){}
+try{soundOn=localStorage.getItem('lpspace-sound')!=='off'}catch(e){}
+try{const l=localStorage.getItem('lpspace-level');if(['easy','medium','hard'].includes(l))level=l}catch(e){}
+const starCount=$('#starCount'), starBox=$('#starBox');
+function showStars(){
+  starCount.textContent=stars;
+  const note=document.getElementById('starNote');if(note)note.textContent=stars?`Stars earned so far: ${stars}.`:'No stars yet.';
+  const rb=document.getElementById('resetBtn');if(rb)rb.disabled=!stars;
+}
+
+/* ---------- voice ---------- */
+/* Rank voices: British English first, then the higher-quality neural/enhanced voices, and never the novelty ones */
+let voice=null;
+function voiceScore(v){
+  const n=v.name.toLowerCase(),l=(v.lang||'').toLowerCase().replace('_','-');
+  if(!l.startsWith('en'))return -1;
+  if(/albert|bad news|bahh|bells|boing|bubbles|cellos|deranged|good news|grandma|grandpa|hysterical|jester|junior|organ|ralph|fred|superstar|trinoids|whisper|wobble|zarvox/.test(n))return -1;
+  let s=l==='en-gb'?30:/^en-(au|ie|nz)/.test(l)?20:10;
+  if(/natural|neural|premium|enhanced/.test(n))s+=40;
+  if(/google uk english female|sonia|libby|serena|kate|martha|stephanie|samantha|karen|moira|tessa|aria|jenny/.test(n))s+=20;
+  if(v.localService===false)s+=5;
+  return s;
+}
+function pickVoice(){
+  try{
+    let best=null,top=-1;
+    speechSynthesis.getVoices().forEach(v=>{const s=voiceScore(v);if(s>top){top=s;best=v}});
+    voice=best;
+  }catch(e){}
+}
+if('speechSynthesis' in window){pickVoice();try{speechSynthesis.onvoiceschanged=pickVoice}catch(e){}}
+/* iOS only lets speech start inside a tap, so unlock it with a silent utterance on the first touch */
+if('speechSynthesis' in window)document.addEventListener('pointerdown',()=>{try{const u=new SpeechSynthesisUtterance(' ');u.volume=0;speechSynthesis.speak(u)}catch(e){}},{once:true});
+let sayTimer=null;
+function say(t){
+  if(!soundOn||!('speechSynthesis' in window))return;
+  try{
+    clearTimeout(sayTimer);
+    const busy=speechSynthesis.speaking||speechSynthesis.pending;
+    speechSynthesis.cancel();
+    /* Speaking straight after cancel() clips the first word in Chrome and Safari, so wait a moment */
+    sayTimer=setTimeout(()=>{
+      const u=new SpeechSynthesisUtterance(t);
+      if(voice){u.voice=voice;u.lang=voice.lang}else u.lang='en-GB';
+      u.rate=.85;u.pitch=1.05;
+      speechSynthesis.speak(u);
+    },busy?220:80);
+  }catch(e){}
+}
+
+/* ---------- sound effects (pentatonic scale) ---------- */
+let ac=null;
+const PENTA=[523.25,587.33,659.25,783.99,880,1046.5,1174.66,1318.51,1567.98,1760];
+function tone(f,dur,type,when,vol){
+  if(!soundOn)return;
+  try{
+    ac=ac||new (window.AudioContext||window.webkitAudioContext)();
+    if(ac.state==='suspended')ac.resume();
+    const t=ac.currentTime+(when||0),o=ac.createOscillator(),g=ac.createGain();
+    o.type=type||'triangle';o.frequency.setValueAtTime(f,t);
+    g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(vol||.16,t+.02);g.gain.exponentialRampToValueAtTime(.0001,t+dur);
+    o.connect(g).connect(ac.destination);o.start(t);o.stop(t+dur+.05);
+  }catch(e){}
+}
+const sfx={
+  note:i=>tone(PENTA[Math.max(0,Math.min(9,i))],.25),
+  click:()=>tone(990,.06,'square',0,.04),
+  whoosh:()=>{tone(392,.3,'sine',0,.1);tone(523,.3,'sine',.08,.08)},
+  yay:()=>[0,2,4,5,7].forEach((n,i)=>tone(PENTA[n],.28,'triangle',i*.08)),
+  oops:()=>{tone(260,.22,'sine',0,.14);tone(196,.3,'sine',.13,.12)}
+};
+
+$('#soundBtn').onclick=()=>{
+  soundOn=!soundOn;
+  try{localStorage.setItem('lpspace-sound',soundOn?'on':'off')}catch(e){}
+  $('#soundWaves').toggleAttribute('hidden',!soundOn);
+  $('#soundX').toggleAttribute('hidden',soundOn);
+  $('#soundBtn').setAttribute('aria-label',soundOn?'Turn sound off':'Turn sound on');
+  if(!soundOn){try{speechSynthesis.cancel()}catch(e){}}else{sfx.click();say('Sound on!')}
+};
+if(!soundOn){$('#soundWaves').setAttribute('hidden','');$('#soundX').removeAttribute('hidden');$('#soundBtn').setAttribute('aria-label','Turn sound on')}
+
+/* ---------- helpers ---------- */
+function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
+const pl=(k,word)=>`${k} ${word}${k===1?'':'s'}`;
+const orList=xs=>xs.length<2?xs.join(''):xs.slice(0,-1).join(', ')+' or '+xs[xs.length-1]+'?';
+const P=(k,s)=>`<span class="planet p-${k}"${s?` style="--s:${s}"`:''}></span>`;
+/* Each game and level deals from its own shuffled bag, so a question doesn't come back until the rest have been seen */
+const bags={};
+function draw(key,items){if(!bags[key]||!bags[key].length)bags[key]=shuffle(items.slice());return bags[key].pop()}
+const stage=$('#stage'),answers=$('#answers'),promptText=$('#promptText');
+let current=null,spoken='',timers=[];
+function later(fn,ms){timers.push(setTimeout(fn,ms))}
+function stopTimers(){timers.forEach(clearTimeout);timers=[]}
+function setPrompt(text,speech){promptText.textContent=text;spoken=speech||text;say(spoken)}
+$('#sayBtn').onclick=()=>say(spoken);
+function clearAnswers(){answers.innerHTML='';answers.className='answers';answers.style.setProperty('--cols',1)}
+
+/* Answer buttons: picture buttons sit in a grid, text-only answers stack as a list */
+function askOpts(opts,right,onRight){
+  clearAnswers();
+  const pics=opts.every(o=>o.icon),cols=pics?(opts.length<=3?opts.length:2):1;
+  answers.className='answers'+(pics?'':' list')+(cols===2?' two':'');
+  answers.style.setProperty('--cols',cols);
+  opts.forEach(o=>{
+    const b=document.createElement('button');b.className='opt';
+    b.innerHTML=(o.icon?`<span class="oi" aria-hidden="true">${o.icon}</span>`:'')+`<span class="ol">${o.label}</span>`;
+    b.onclick=()=>{
+      if(o.label===right){b.classList.add('right');[...answers.children].forEach(x=>x.disabled=true);win(onRight)}
+      else{b.classList.add('wrong');b.disabled=true;sfx.oops();say('Not quite. Try again!')}
+    };
+    answers.appendChild(b);
+  });
+}
+function win(after){
+  sfx.yay();stars++;
+  try{localStorage.setItem('lpspace-stars',stars)}catch(e){}
+  showStars();starBox.classList.remove('bump');void starBox.offsetWidth;starBox.classList.add('bump');
+  burst(60);
+  if(after)after();
+  later(showNext,1100);
+  if(stars%5===0)setTimeout(showCheer,2000);
+}
+function showNext(){
+  clearAnswers();
+  const b=document.createElement('button');b.className='next';b.innerHTML='Next <span aria-hidden="true">&#10140;</span>';
+  b.onclick=()=>{b.disabled=true;sfx.click();play()};
+  answers.appendChild(b);
+}
+function showFact(f){stage.insertAdjacentHTML('beforeend',`<p class="fact">${f}</p>`)}
+/* Shared round for picture questions: one picture, a question, picture or text answers, then a fact */
+function quizRound(it){
+  stage.innerHTML=`<div class="pic-card"><span class="pic" aria-hidden="true">${it.pic}</span>${it.name?`<span class="pic-name">${it.name}</span>`:''}</div>`;
+  setPrompt(it.q,it.sayAll||(it.say||it.q)+' '+orList(it.opts.map(o=>o.label)));
+  askOpts(it.opts,it.a,()=>{showFact(it.fact);say('Yes! '+it.fact)});
+}
+const textQ=h=>quizRound({pic:h.pic,q:h.q,opts:shuffle([h.a,...h.w].map(label=>({label}))),a:h.a,fact:h.fact||h.a+'.'});
+/* Shared round for putting things in order: empty numbered slots, shuffled cards, tap the next one */
+function orderRound({items,text,speech,hint,fact,anchor,cap}){
+  let n=0;
+  stage.innerHTML=(anchor||'')+`<div class="slots">${items.map((_,i)=>`<div class="slot" id="slot${i}"><span class="n">${i+1}</span></div>`).join('')}</div>`
+    +(cap?`<p class="cap">${cap}</p>`:'')
+    +`<div class="cards" id="cards">${shuffle(items.map((_,i)=>i)).map(i=>`<button class="card" data-i="${i}" aria-label="${items[i].label}">${items[i].icon}<span class="cl">${items[i].label}</span></button>`).join('')}</div>`;
+  clearAnswers();
+  setPrompt(text,speech);
+  $('#cards').onclick=e=>{
+    const b=e.target.closest('.card');if(!b||b.classList.contains('used'))return;
+    const i=+b.dataset.i;
+    if(i===n){
+      b.classList.add('used');const s=$('#slot'+n);s.classList.add('filled');s.innerHTML=`${items[n].icon}<span class="cl">${items[n].label}</span>`;
+      sfx.note(n+1);n++;
+      if(n===items.length)win(()=>{showFact(fact);say('Yes! '+fact)});
+      else say(items[n-1].label);
+    }else{
+      b.classList.remove('wrong');void b.offsetWidth;b.classList.add('wrong');sfx.oops();say(hint(n));
+    }
+  };
+}
+
+/* ---------- question banks ---------- */
+const PLANETS={
+  mercury:{name:'Mercury',clue:'I am the closest planet to the Sun.',fact:'Mercury is the smallest planet and the closest to the Sun.'},
+  venus:{name:'Venus',clue:'I am the hottest planet.',fact:'Venus is the hottest planet. Its thick clouds trap the heat.'},
+  earth:{name:'Earth',clue:'I am the planet you live on.',fact:'Earth is our home, the only planet we know with living things.'},
+  mars:{name:'Mars',clue:'I am called the red planet.',fact:'Mars is called the red planet because of its red, dusty rocks.'},
+  jupiter:{name:'Jupiter',clue:'I am the biggest planet of all.',fact:'Jupiter is the biggest planet. It has a giant storm called the Great Red Spot.'},
+  saturn:{name:'Saturn',clue:'I have big, bright rings around me.',fact:'Saturn has beautiful rings made of ice and rock.'},
+  uranus:{name:'Uranus',clue:'I spin on my side, like a rolling ball.',fact:'Uranus spins on its side, like a ball rolling along.'},
+  neptune:{name:'Neptune',clue:'I am the furthest planet from the Sun.',fact:'Neptune is the furthest planet from the Sun. It is cold and very windy.'}
+};
+const ORDER=['mercury','venus','earth','mars','jupiter','saturn','uranus','neptune'];
+const PLANET_HARD=[
+  {pic:P('jupiter','1em'),q:'Which planet has a giant storm called the Great Red Spot?',a:'Jupiter',w:['Mars','Venus'],fact:'The Great Red Spot on Jupiter is a storm bigger than the whole Earth.'},
+  {pic:'🔢',q:'How many planets are there in our Solar System?',a:'Eight',w:['Nine','Twelve'],fact:'There are eight planets. Pluto is now called a dwarf planet.'},
+  {pic:P('venus','1em'),q:'Which planet is about the same size as Earth?',a:'Venus',w:['Jupiter','Mercury'],fact:'Venus is nearly the same size as Earth, but it is far too hot to live on.'},
+  {pic:'🌋',q:'Which planet has the tallest volcano we know of?',a:'Mars',w:['Earth','Neptune'],fact:'Olympus Mons on Mars is about three times taller than Mount Everest.'},
+  {pic:'🪐',q:'What are Saturn\'s rings made of?',a:'Ice and rock',w:['Gold','Rainbows'],fact:'Saturn\'s rings are billions of pieces of ice and rock.'},
+  {pic:'❄️',q:'Which planet is the coldest and windiest?',a:'Neptune',w:['Mercury','Venus'],fact:'Neptune is so far from the Sun that it is freezing, with the fastest winds of any planet.'},
+  {pic:'⏳',q:'On which planet is one day longer than one year?',a:'Venus',w:['Earth','Jupiter'],fact:'Venus spins so slowly that one day there is longer than its whole year.'}
+];
+const PHASES={new:{label:'New moon',icon:'🌑',fact:'At new moon, the sunny side of the Moon faces away from us, so we can hardly see it.'},crescent:{label:'Crescent',icon:'🌒',fact:'A crescent moon is a thin, curved slice of Moon.'},half:{label:'Half moon',icon:'🌓',fact:'At half moon, we can see half of the Moon\'s sunny side.'},gibbous:{label:'Gibbous',icon:'🌔',fact:'A gibbous moon is more than half, but not quite full.'},full:{label:'Full moon',icon:'🌕',fact:'At full moon, we see the whole sunny side of the Moon.'}};
+const MOON_HARD=[
+  {pic:'🌕',q:'Does the Moon make its own light?',a:'No, it reflects light from the Sun',w:['Yes, it is a giant light bulb','Yes, it is on fire'],fact:'The Moon shines because sunlight bounces off it.'},
+  {pic:'🗓️',q:'How long does the Moon take to go all the way round the Earth?',a:'About a month',w:['One day','One hour'],fact:'The Moon goes round the Earth about once a month. That is where the word month comes from.'},
+  {pic:'🌑',q:'Why does the Moon seem to change shape?',a:'We see different amounts of its sunny side',w:['Someone takes bites out of it','Clouds cut it up'],fact:'As the Moon travels round the Earth, we see different amounts of its sunny side.'},
+  'order','order'
+];
+const LIGHT={yes:{label:'Makes light',icon:'💡'},no:{label:'No light of its own',icon:'🌑'}};
+const LIGHT_ITEMS=[
+  ['☀️','the Sun','yes','The Sun makes its own light. It is a star.'],['🕯️','a candle','yes','A candle flame makes its own light.'],['🔦','a torch','yes','A torch makes its own light from a battery.'],['⭐','a star','yes','Stars make their own light, just like the Sun.'],['⚡','lightning','yes','Lightning makes a bright flash of light.'],
+  ['🌕','the Moon','no','The Moon does not make light. It shines because sunlight bounces off it.'],['🪞','a mirror','no','A mirror does not make light. It bounces light back.'],['🌍','the Earth','no','The Earth does not make its own light. The Sun lights it up.'],['🪐','a planet','no','Planets do not make light. We see them because the Sun lights them up.']
+];
+const SUN_MED=[
+  {pic:P('sun','1em'),q:'What is the Sun?',a:'A star',w:['A planet','A moon'],fact:'The Sun is a star, the closest star to Earth.'},
+  {pic:'😎',q:'Is it safe to look straight at the Sun?',a:'No, never',w:['Yes, any time','Only at lunchtime'],fact:'Never look straight at the Sun, even with sunglasses. It can hurt your eyes.'},
+  {pic:'🌍',q:'What does the Sun give the Earth?',a:'Light and heat',w:['Rain and snow','Rocks and sand'],fact:'The Sun gives us light and heat. Without it, Earth would be dark and frozen.'},
+  {pic:'🌅',q:'When does the Sun rise?',a:'In the morning',w:['At bedtime','At lunchtime'],fact:'The Sun rises in the morning and sets in the evening.'},
+  {pic:'🧴',q:'How can you stay safe in strong sunshine?',a:'Wear sun cream and a hat',w:['Wear a woolly scarf','Stare at the Sun'],fact:'Sun cream, a hat and shade keep you safe in strong sunshine.'},
+  {pic:'🌱',q:'Why do plants need the Sun?',a:'To make their food',w:['To keep them wet','They don\'t need it'],fact:'Plants use sunlight to make their food.'}
+];
+const SUN_HARD=[
+  {pic:'⏱️',q:'How long does sunlight take to reach Earth?',a:'About 8 minutes',w:['About 1 second','About 1 year'],fact:'Sunlight travels about 150 million kilometres to reach us. It takes about 8 minutes.'},
+  {pic:P('sun','1em'),q:'What is the Sun mostly made of?',a:'Very hot gas',w:['Rock','Ice'],fact:'The Sun is a giant ball of very hot, glowing gas.'},
+  {pic:'⭐',q:'Which star is closest to Earth?',a:'The Sun',w:['The North Star','The Moon'],fact:'The Sun is the closest star. The next closest is so far that its light takes over 4 years to reach us.'},
+  {pic:'🔭',q:'Why does the Sun look small in the sky?',a:'It is very, very far away',w:['It is tiny','It is behind the clouds'],fact:'The Sun is huge, but it looks small because it is so far away.'},
+  {pic:'🔄',q:'What travels round and round the Sun?',a:'The planets, including Earth',w:['Nothing at all','Only the Moon'],fact:'All eight planets, including Earth, travel round the Sun.'},
+  {pic:'🌇',q:'Why does the Sun seem to move across the sky?',a:'Because the Earth is spinning',w:['Because the Sun is walking','Because of the wind'],fact:'The Sun stays still. It seems to move because the Earth is spinning.'}
+];
+const KIT={rocket:{label:'Rocket',icon:'🚀',fact:'A rocket blasts astronauts up into space.'},astronaut:{label:'Astronaut',icon:'🧑‍🚀',fact:'An astronaut is a person who travels into space.'},satellite:{label:'Satellite',icon:'🛰️',fact:'A satellite travels round the Earth. Some help us watch the weather.'},telescope:{label:'Telescope',icon:'🔭',fact:'A telescope makes faraway stars and planets look closer.'}};
+const KIT_MED=[
+  {pic:'🪐',q:'What would you use to look at faraway planets?',a:'telescope'},
+  {pic:'🌌',q:'What would you use to travel into space?',a:'rocket'},
+  {pic:'📺',q:'What sends TV pictures and weather maps around the world?',a:'satellite'},
+  {pic:'🌕',q:'Who could take a walk on the Moon?',a:'astronaut'},
+  {pic:'🪂',q:'What helps a space capsule land softly back on Earth?',a:'parachute'}
+];
+const EXTRA_KIT={parachute:{label:'Parachute',icon:'🪂',fact:'Big parachutes slow a space capsule down so it lands softly.'}};
+const EXPLORE_HARD=[
+  {pic:'🌕',q:'Who was the first person to walk on the Moon?',a:'Neil Armstrong',w:['Tim Peake','Isaac Newton'],fact:'Neil Armstrong walked on the Moon in 1969.'},
+  {pic:'🚀',q:'Who was the first person to travel into space?',a:'Yuri Gagarin',w:['Neil Armstrong','Mary Anning'],fact:'Yuri Gagarin flew into space in 1961.'},
+  {pic:'🛰️',q:'British astronaut Tim Peake lived for six months on what?',a:'The International Space Station',w:['The Moon','Mars'],fact:'Tim Peake lived on the International Space Station in 2015 and 2016.'},
+  {pic:'🧑‍🚀',q:'Why do astronauts wear spacesuits outside?',a:'There is no air to breathe in space',w:['To keep their clothes clean','To look smart'],fact:'Space has no air, so a spacesuit gives astronauts air and keeps them safe.'},
+  {pic:'🐕',q:'Laika was a famous space traveller. What was Laika?',a:'A dog',w:['A cat','A rabbit'],fact:'Laika the dog went round the Earth in 1957, before any people.'},
+  {pic:'🤖',q:'Which planet have robot rovers driven around on?',a:'Mars',w:['The Sun','Neptune'],fact:'Robot rovers have driven around Mars, taking photos and testing rocks.'}
+];
+const BODIES={sun:'the Sun',moon:'the Moon',mercury:'Mercury',venus:'Venus',earth:'Earth',mars:'Mars',jupiter:'Jupiter',saturn:'Saturn',uranus:'Uranus',neptune:'Neptune'};
+const bodyLabel=k=>BODIES[k][0].toUpperCase()+BODIES[k].slice(1);
+const PAIRS=[
+  ['sun','earth','The Sun is so big that about a million Earths could fit inside it!'],
+  ['earth','moon','Earth is about four times wider than the Moon.'],
+  ['jupiter','earth','Jupiter is so big that more than a thousand Earths could fit inside it.'],
+  ['earth','mars','Earth is about twice as wide as Mars.'],
+  ['sun','moon','The Sun and Moon look the same size in our sky, but the Sun is about 400 times wider!'],
+  ['saturn','earth','Saturn is about nine times wider than Earth.']
+];
+const SIZE_ORDERS=[['moon','earth','sun'],['mars','earth','jupiter'],['mercury','earth','saturn'],['moon','mars','jupiter'],['earth','neptune','jupiter']];
+const SIZE_HARD=[
+  {pic:P('mercury','1em'),q:'Which is the smallest planet?',a:'Mercury',w:['Jupiter','Earth'],fact:'Mercury is the smallest planet, only a bit bigger than our Moon.'},
+  {pic:P('jupiter','1em'),q:'Which is the biggest planet?',a:'Jupiter',w:['Mars','Venus'],fact:'Jupiter is the biggest planet in our Solar System.'},
+  {pic:P('sun','1em'),q:'About how many Earths could fit inside the Sun?',a:'About a million',w:['About ten','Just two'],fact:'About a million Earths could fit inside the Sun!'},
+  {pic:P('venus','1em'),q:'Which planet is closest in size to Earth?',a:'Venus',w:['Jupiter','Mercury'],fact:'Venus is almost the same size as Earth.'},
+  {pic:'🌗',q:'Why do the Sun and Moon look the same size in our sky?',a:'The Sun is much further away',w:['They are the same size','The Moon is hotter'],fact:'The Sun is about 400 times wider than the Moon, but also about 400 times further away.'},
+  {pic:P('moon','1em'),q:'About how many Moons could fit in a line across the Earth?',a:'About four',w:['About a hundred','Just one'],fact:'About four Moons side by side would stretch across the Earth.'}
+];
+/* Star pictures: star positions in a 300 x 220 box, and the order to join them (a star can be visited twice) */
+const SKIES={
+  cassiopeia:{name:'Cassiopeia',stars:[[30,70],[85,145],[145,95],[200,155],[265,60]],path:[0,1,2,3,4],fact:'Cassiopeia looks like a W. It is named after a queen in an old Greek story.'},
+  crown:{name:'Northern Crown',drew:'the Northern Crown',stars:[[45,75],[68,132],[110,165],[158,175],[205,160],[242,122],[258,72]],path:[0,1,2,3,4,5,6],fact:'The Northern Crown is a curve of stars, like a crown.'},
+  plough:{name:'The Plough',drew:'the Plough',stars:[[28,48],[80,62],[125,84],[165,108],[170,172],[255,178],[268,112]],path:[0,1,2,3,4,5,6,3],fact:'The Plough is seven bright stars. In America it is called the Big Dipper.'},
+  bear:{name:'Little Bear',drew:'the Little Bear',stars:[[30,38],[78,58],[118,84],[152,114],[150,174],[228,178],[232,120]],path:[0,1,2,3,4,5,6,3],fact:'The star at the tip of the Little Bear\'s tail is Polaris, the North Star.'},
+  orion:{name:'Orion',stars:[[72,32],[218,48],[116,114],[146,108],[176,102],[88,196],[236,186]],path:[2,0,1,4,6,5,2,3,4],fact:'Orion is a hunter. The three stars in a row are Orion\'s Belt.'}
+};
+
+/* ---------- games ---------- */
+const GAMES={
+  daynight:{
+    title:'Day and Night',topic:'Earth spins',
+    tip:'The Earth spins round once every day. The side facing the Sun has daytime, and the side facing away has night-time. Bao is standing on the Earth.',
+    levels:{easy:'Easy: is it day or night for Bao?',medium:'Medium: spin the Earth to make it day or night for Bao.',hard:'Hard: questions about days, years, sunrise and sunset.'},
+    round(){
+      if(level==='hard')return textQ(draw('dn-hard',DN_HARD));
+      /* m is Bao's angle on the Earth in degrees: 180 faces the Sun (midday), 0 faces away (midnight) */
+      const svg=m=>`<svg class="dn" viewBox="0 0 320 210" role="img" aria-label="The Sun shining on the spinning Earth">
+        <g aria-hidden="true"><circle cx="18" cy="105" r="44" fill="#ffc93c"/><circle cx="18" cy="105" r="56" fill="#ffc93c" opacity=".25"/>
+        <path d="M70 70L118 82M74 105H122M70 140L118 128" stroke="#ffe07a" stroke-width="4" stroke-linecap="round" stroke-dasharray="6 8"/></g>
+        <g id="earthSpin" class="spin" style="transform:rotate(${m+90}deg)">
+          <circle cx="210" cy="105" r="78" fill="#1f6fd1"/>
+          <path d="M170 60c18-14 44-10 52 6 6 14-10 22-6 36 3 12-16 18-26 8-12-12-36-30-20-50z M232 120c14-6 30 2 30 16 0 16-18 28-32 20-12-7-12-30 2-36z M178 150c8-4 18 0 18 8s-10 14-18 10-8-14 0-18z" fill="#43c46f"/>
+        </g>
+        <path d="M210 23A82 82 0 0 1 210 187Z" fill="#050819" opacity=".62"/>
+        <g id="baoSpin" class="spin" style="transform:rotate(${m+90}deg)"><g transform="translate(210 27)"><circle r="15" fill="#fff" stroke="#2a2440" stroke-width="2.5"/><circle cx="-11" cy="-11" r="6" fill="#2a2440"/><circle cx="11" cy="-11" r="6" fill="#2a2440"/><circle cx="-5" cy="-1" r="3.4" fill="#2a2440"/><circle cx="5" cy="-1" r="3.4" fill="#2a2440"/><circle cy="5" r="2.4" fill="#2a2440"/></g></g>
+        <text x="300" y="200" text-anchor="end" font-family="Baloo 2, sans-serif" font-weight="800" font-size="15" fill="#b8b5e3">night side</text>
+      </svg>`;
+      const zone=m=>{const c=Math.cos((m-180)*Math.PI/180);return c>.3?'day':c<-.3?'night':'edge'};
+      if(level==='easy'){
+        const night=Math.random()<.5,m=(night?0:180)+(Math.random()*100-50);
+        stage.innerHTML=svg(m);
+        const f=night?'Bao\'s side of the Earth faces away from the Sun, so it is night-time.':'Bao\'s side of the Earth faces the Sun, so it is daytime.';
+        setPrompt('Is it day or night for Bao?','Look where Bao is standing on the Earth. Is it day or night for Bao?');
+        return askOpts([{label:'Day',icon:'☀️'},{label:'Night',icon:'🌙'}],night?'Night':'Day',()=>{showFact(f);say('Yes! '+f)});
+      }
+      /* rot keeps counting up so the spin never runs backwards when the angle wraps past 360 */
+      const want=Math.random()<.5?'night':'day';let m=want==='night'?180:0,rot=m;
+      stage.innerHTML=svg(m)+'<p class="cap" id="dnCap"></p>';
+      setPrompt(`Spin the Earth to make it ${want==='night'?'night-time':'daytime'} for Bao!`,`It's ${want==='night'?'daytime':'night-time'} for Bao. Tap spin to turn the Earth until it is ${want==='night'?'night':'day'}.`);
+      clearAnswers();
+      const spin=document.createElement('button');spin.className='big-btn';spin.innerHTML='Spin the Earth <span aria-hidden="true">↻</span>';
+      spin.onclick=()=>{
+        rot+=45;m=rot%360;document.querySelectorAll('.dn .spin').forEach(g=>g.style.transform=`rotate(${rot+90}deg)`);sfx.whoosh();
+        const z=zone(m);
+        if(z===want){spin.disabled=true;$('#dnCap').textContent='';const f=`Now Bao's side of the Earth faces ${want==='night'?'away from':'towards'} the Sun. The Earth spins round once every day.`;later(()=>win(()=>{showFact(f);say('Yes! '+f)}),500)}
+        else if(z==='edge'){const t=want==='night'?'The Sun is setting for Bao. Keep spinning!':'The Sun is rising for Bao. Keep spinning!';$('#dnCap').textContent=t;say(t)}
+        else{$('#dnCap').textContent='Keep spinning!';say('Keep spinning!')}
+      };
+      answers.appendChild(spin);
+    }
+  },
+  moon:{
+    title:'Moon Shapes',topic:'The Moon',
+    tip:'The Moon doesn\'t make its own light. It shines because sunlight bounces off it. As it travels round the Earth each month, we see different amounts of its sunny side, so it seems to change shape.',
+    levels:{easy:'Easy: crescent, half moon or full moon?',medium:'Medium: find the right Moon picture, including new moon and gibbous.',hard:'Hard: put the Moon shapes in order, and why the Moon changes.'},
+    round(){
+      if(level==='easy'){const k=draw('moon-easy',['crescent','half','full','crescent','half','full']);return quizRound({pic:PHASES[k].icon,q:'What is this Moon shape called?',opts:['crescent','half','full'].map(x=>({label:PHASES[x].label})),a:PHASES[k].label,fact:PHASES[k].fact})}
+      if(level==='medium'){
+        const k=draw('moon-med',Object.keys(PHASES)),others=shuffle(Object.keys(PHASES).filter(x=>x!==k)).slice(0,3);
+        return quizRound({pic:'🔭',q:`Which picture shows a ${PHASES[k].label.toLowerCase()}?`,opts:shuffle([k,...others]).map(x=>({label:PHASES[x].label,icon:PHASES[x].icon})),a:PHASES[k].label,fact:PHASES[k].fact});
+      }
+      const h=draw('moon-hard',MOON_HARD);
+      if(h!=='order')return textQ(h);
+      const ks=['new','crescent','half','gibbous','full'];
+      orderRound({items:ks.map(k=>({label:PHASES[k].label,icon:PHASES[k].icon})),text:'Put the Moon shapes in order, from new moon to full moon.',speech:'Put the Moon shapes in order. Start with the new moon, and finish with the full moon.',
+        hint:n=>n===0?'Start with the new moon. It is the dark one.':`Not quite. Which shape has a bit more light than the ${PHASES[ks[n-1]].label.toLowerCase()}?`,
+        fact:'Each night we see a little more of the Moon\'s sunny side, until it is full. Then it shrinks back again.'});
+    }
+  },
+  sun:{
+    title:'Our Star, the Sun',topic:'Light',
+    tip:'The Sun is a star: a giant ball of hot, glowing gas that gives us light and heat. Some things make their own light, like the Sun and a candle. Others, like the Moon, only shine because light bounces off them.',
+    levels:{easy:'Easy: does it make its own light?',medium:'Medium: facts about the Sun and staying safe.',hard:'Hard: how far away the Sun is, what it is made of, and why it seems to move.'},
+    round(){
+      if(level==='medium')return textQ(draw('sun-med',SUN_MED));
+      if(level==='hard')return textQ(draw('sun-hard',SUN_HARD));
+      const it=draw('light',LIGHT_ITEMS);
+      quizRound({pic:it[0],name:bodyCase(it[1]),q:`Does ${it[1]} make its own light?`,sayAll:`Does ${it[1]} make its own light? Or does it have no light of its own?`,opts:[{...LIGHT.yes},{...LIGHT.no}],a:LIGHT[it[2]].label,fact:it[3]});
+    }
+  },
+  explore:{
+    title:'Space Explorers',topic:'Space travel',
+    tip:'People explore space with rockets, telescopes, satellites and robot rovers. Astronauts live and work on the International Space Station, high above the Earth.',
+    levels:{easy:'Easy: name the rocket, astronaut, satellite or telescope.',medium:'Medium: what would you use for each job?',hard:'Hard: famous space firsts, from Laika the dog to Tim Peake.'},
+    round(){
+      if(level==='hard')return textQ(draw('ex-hard',EXPLORE_HARD));
+      if(level==='medium'){
+        const h=draw('ex-med',KIT_MED),all={...KIT,...EXTRA_KIT},others=shuffle(Object.keys(all).filter(k=>k!==h.a)).slice(0,2);
+        return quizRound({pic:h.pic,q:h.q,opts:shuffle([h.a,...others]).map(k=>({...all[k]})),a:all[h.a].label,fact:all[h.a].fact});
+      }
+      const k=draw('ex-easy',Object.keys(KIT)),others=shuffle(Object.keys(KIT).filter(x=>x!==k)).slice(0,2);
+      quizRound({pic:KIT[k].icon,q:'What is this called?',opts:shuffle([k,...others]).map(x=>({label:KIT[x].label})),a:KIT[k].label,fact:KIT[k].fact});
+    }
+  },
+  planets:{
+    title:'Meet the Planets',topic:'Planets',
+    tip:'There are eight planets in our Solar System: Mercury, Venus, Earth, Mars, Jupiter, Saturn, Uranus and Neptune. Each one looks different.',
+    levels:{easy:'Easy: name the planet from its picture.',medium:'Medium: listen to the clue and tap the right planet.',hard:'Hard: planet facts, like which has the tallest volcano.'},
+    round(){
+      if(level==='hard')return textQ(draw('pl-hard',PLANET_HARD));
+      if(level==='easy'){
+        const k=draw('pl-easy',['earth','mars','saturn','jupiter']),others=shuffle(['earth','mars','saturn','jupiter'].filter(x=>x!==k)).slice(0,2);
+        return quizRound({pic:P(k,'1em'),q:'Which planet is this?',opts:shuffle([k,...others]).map(x=>({label:PLANETS[x].name})),a:PLANETS[k].name,fact:PLANETS[k].fact});
+      }
+      const k=draw('pl-med',ORDER),others=shuffle(ORDER.filter(x=>x!==k)).slice(0,2);
+      quizRound({pic:'🔭',q:PLANETS[k].clue+' Which planet am I?',opts:shuffle([k,...others]).map(x=>({label:PLANETS[x].name,icon:P(x,'.9em')})),a:PLANETS[k].name,fact:PLANETS[k].fact});
+    }
+  },
+  lineup:{
+    title:'Planet Line-up',topic:'Solar System',
+    tip:'The planets travel round the Sun in order: Mercury, Venus, Earth, Mars, Jupiter, Saturn, Uranus, Neptune. A rhyme helps: "My Very Easy Method Just Speeds Up Naming".',
+    levels:{easy:'Easy: three planets that are next to each other.',medium:'Medium: four planets from anywhere in the line.',hard:'Hard: all eight planets.'},
+    round(){
+      let ks;
+      if(level==='easy'){const s=draw('lu-easy',[0,1]);ks=ORDER.slice(s,s+3)}
+      else if(level==='medium')ks=shuffle(ORDER.slice()).slice(0,4).sort((a,b)=>ORDER.indexOf(a)-ORDER.indexOf(b));
+      else ks=ORDER.slice();
+      orderRound({items:ks.map(k=>({label:PLANETS[k].name,icon:P(k,'34px')})),anchor:`<div class="anchor">${P('sun','34px')} Start next to the Sun</div>`,
+        text:'Put the planets in order. Start with the one closest to the Sun.',speech:`Put the planets in order from the Sun. Tap the one closest to the Sun first.`,
+        hint:n=>n===0?'Not quite. Which of these is closest to the Sun?':`Not quite. Which comes after ${PLANETS[ks[n-1]].name}?`,
+        fact:level==='hard'?'My Very Easy Method Just Speeds Up Naming: Mercury, Venus, Earth, Mars, Jupiter, Saturn, Uranus, Neptune.':ks.map(k=>PLANETS[k].name).join(', then ')+'.'});
+    }
+  },
+  sizes:{
+    title:'Big and Small',topic:'Sizes',
+    tip:'Things in space are drawn the same size in this game, so children have to know which is really bigger. The Sun is far bigger than any planet, and Earth is about four times wider than the Moon.',
+    levels:{easy:'Easy: which of the two is really bigger?',medium:'Medium: put three in order from smallest to biggest.',hard:'Hard: size facts, like how many Earths fit inside the Sun.'},
+    round(){
+      if(level==='hard')return textQ(draw('sz-hard',SIZE_HARD));
+      if(level==='medium'){
+        const ks=draw('sz-med',SIZE_ORDERS);
+        return orderRound({items:ks.map(k=>({label:bodyLabel(k),icon:P(k,'40px')})),cap:'They are all drawn the same size. Which is really smallest?',
+          text:'Put them in order from smallest to biggest.',speech:`Put ${BODIES[ks[0]]}, ${BODIES[ks[1]]} and ${BODIES[ks[2]]} in order, from the smallest to the biggest.`,
+          hint:n=>n===0?'Not quite. Which one is really the smallest?':'Not quite. Which is the next smallest?',fact:`${bodyLabel(ks[0])} is smallest, then ${BODIES[ks[1]]}, and ${BODIES[ks[2]]} is the biggest.`});
+      }
+      const p=draw('sz-easy',PAIRS),two=shuffle([p[0],p[1]]);
+      stage.innerHTML=`<div class="pic-card"><div class="pair" aria-hidden="true">${two.map(k=>P(k,'.9em')).join('')}</div><span class="cap">Drawn the same size here</span></div>`;
+      setPrompt(`Which is really bigger, ${BODIES[two[0]]} or ${BODIES[two[1]]}?`);
+      askOpts(two.map(k=>({label:bodyLabel(k),icon:P(k,'.9em')})),bodyLabel(p[0]),()=>{showFact(p[2]);say('Yes! '+p[2])});
+    }
+  },
+  stars:{
+    title:'Star Pictures',topic:'Stars',
+    tip:'Long ago, people joined up bright stars to make pictures in the sky called constellations. Many have names from old stories, like Orion the hunter.',
+    levels:{easy:'Easy: small star pictures, with numbers to follow.',medium:'Medium: bigger star pictures. Follow the twinkling star.',hard:'Hard: name the constellation from its shape.'},
+    round(){
+      const pool=level==='easy'?['cassiopeia','crown']:level==='medium'?['plough','bear','orion']:Object.keys(SKIES);
+      const k=draw('sky-'+level,pool),c=SKIES[k];
+      const lines=level==='hard'?c.path.slice(1).map((s,i)=>{const a=c.stars[c.path[i]],b=c.stars[s];return `<line class="ln" x1="${a[0]}" y1="${a[1]}" x2="${b[0]}" y2="${b[1]}"/>`}).join(''):'';
+      stage.innerHTML=`<svg class="sky" viewBox="0 0 300 220" role="img" aria-label="Stars in the night sky"><g id="lines">${lines}</g>
+        ${c.stars.map((s,i)=>`<g class="star" data-i="${i}"><circle class="halo" cx="${s[0]}" cy="${s[1]}" r="15"/><circle class="st" cx="${s[0]}" cy="${s[1]}" r="6"/>${level==='easy'?`<text class="num" x="${s[0]+10}" y="${s[1]-10}">${c.path.indexOf(i)+1}</text>`:''}<circle class="hit" cx="${s[0]}" cy="${s[1]}" r="24"/></g>`).join('')}</svg>`;
+      if(level==='hard'){
+        const opts=shuffle([k,...shuffle(Object.keys(SKIES).filter(x=>x!==k)).slice(0,2)]).map(x=>({label:SKIES[x].name}));
+        setPrompt('Which star picture is this?','Which star picture is this? '+orList(opts.map(o=>o.label)));
+        return askOpts(opts,c.name,()=>{showFact(c.fact);say('Yes! '+c.fact)});
+      }
+      clearAnswers();
+      let n=0;const svg=stage.querySelector('.sky'),starEl=i=>svg.querySelector(`.star[data-i="${i}"]`);
+      const mark=()=>{svg.querySelectorAll('.star').forEach(g=>g.classList.remove('next-star'));if(n<c.path.length)starEl(c.path[n]).classList.add('next-star')};
+      mark();
+      setPrompt(level==='easy'?'Join the stars! Tap them in number order.':'Join the stars! Tap the twinkling star each time.',level==='easy'?'Let\'s draw a star picture. Tap the stars in number order, starting at one.':'Let\'s draw a star picture. Tap the twinkling star each time.');
+      svg.onclick=e=>{
+        const g=e.target.closest('.star');if(!g||n>=c.path.length)return;
+        if(+g.dataset.i!==c.path[n]){sfx.oops();say('Try the twinkling star.');return}
+        if(n>0){const a=c.stars[c.path[n-1]],b=c.stars[c.path[n]];$('#lines').insertAdjacentHTML('beforeend',`<line class="ln" x1="${a[0]}" y1="${a[1]}" x2="${b[0]}" y2="${b[1]}"/>`)}
+        sfx.note(n);n++;mark();
+        if(n===c.path.length){const f=`You drew ${c.drew||c.name}! ${c.fact}`;win(()=>{showFact(f);say(f)})}
+      };
+    }
+  }
+};
+const DN_HARD=[
+  {pic:'🌍',q:'Why do we have day and night?',a:'The Earth spins round',w:['The Sun switches off','Clouds cover the Sun'],fact:'The Earth spins, so each place takes turns facing the Sun.'},
+  {pic:'🔄',q:'How long does the Earth take to spin round once?',a:'One day',w:['One week','One year'],fact:'The Earth spins round once every day, about 24 hours.'},
+  {pic:'☀️',q:'How long does the Earth take to travel all the way round the Sun?',a:'One year',w:['One day','One hour'],fact:'The Earth takes one year to travel round the Sun.'},
+  {pic:'🌇',q:'What do we call the time when the Sun goes down?',a:'Sunset',w:['Sunrise','Midday'],fact:'Sunset is when the Sun goes down in the evening.'},
+  {pic:'🇦🇺',q:'When it is daytime in the UK, what is it usually like in Australia?',a:'Night-time',w:['Daytime too','Always summer'],fact:'Australia is on the other side of the Earth, so it is usually night there when it is day here.'},
+  {pic:'🧭',q:'Which direction does the Sun rise in?',a:'The east',w:['The west','Under the sea'],fact:'The Sun rises in the east and sets in the west.'}
+];
+const bodyCase=s=>s.replace(/^(a|the) /,'');
+
+/* ---------- navigation ---------- */
+const home=$('#home'),game=$('#game'),homeBtn=$('#homeBtn');
+function play(){stopTimers();current.round()}
+function setTip(){$('#gTip').textContent=current.tip+' '+current.levels[level]}
+document.querySelectorAll('.tile').forEach(t=>t.onclick=()=>{
+  sfx.click();current=GAMES[t.dataset.game];
+  $('#gTopic').textContent=current.topic;$('#gTopic').style.setProperty('--cd',getComputedStyle(t).getPropertyValue('--cd'));
+  $('#gTitle').textContent=current.title;setTip();
+  document.body.classList.add('in-game');home.hidden=true;game.hidden=false;homeBtn.hidden=false;window.scrollTo(0,0);
+  play();
+});
+homeBtn.onclick=()=>{sfx.click();stopTimers();try{speechSynthesis.cancel()}catch(e){}game.hidden=true;home.hidden=false;homeBtn.hidden=true;document.body.classList.remove('in-game');window.scrollTo(0,0)};
+$('#pandaBtn').onclick=e=>{const b=e.currentTarget;b.classList.remove('wiggle');void b.offsetWidth;b.classList.add('wiggle');sfx.yay();say(stars?`Hi, I'm Bao! You have ${pl(stars,'star')}. Pick a game!`:"Hi, I'm Bao the panda! Let's blast off into space. Pick a game!")};
+
+/* ---------- difficulty ---------- */
+const LEVEL_SAY={easy:'Easy! Let\'s start exploring.',medium:'Medium! A bit trickier.',hard:'Hard! Super space questions. You can do it!'};
+function showLevel(){document.querySelectorAll('.lv').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.level===level)))}
+showLevel();
+document.querySelectorAll('.lv').forEach(b=>b.onclick=()=>{
+  if(b.dataset.level===level)return;
+  level=b.dataset.level;
+  try{localStorage.setItem('lpspace-level',level)}catch(e){}
+  showLevel();sfx.click();
+  if(game.hidden)say(LEVEL_SAY[level]);
+  else{setTip();play()}
+});
+
+/* ---------- cheer + confetti ---------- */
+function showCheer(){
+  if(!$('#timesUp').hidden)return;
+  $('#cheerText').textContent=`You have ${stars} stars! Bao is so proud of you.`;
+  $('#cheer').hidden=false;burst(160);say(`Superstar! You have ${stars} stars!`);
+}
+$('#cheerBtn').onclick=()=>{sfx.click();$('#cheer').hidden=true};
+
+const cv=$('#confetti'),cx=cv.getContext('2d');let parts=[],running=false;
+const reduce=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
+function palette(){const s=getComputedStyle(document.documentElement);return['--red','--gold','--jade','--blue','--plum','--cheek'].map(v=>s.getPropertyValue(v).trim())}
+function burst(n){
+  if(reduce)return;
+  const dpr=window.devicePixelRatio||1;cv.width=innerWidth*dpr;cv.height=innerHeight*dpr;cx.setTransform(dpr,0,0,dpr,0,0);
+  const cols=palette();
+  for(let i=0;i<n;i++)parts.push({x:innerWidth/2+(Math.random()-.5)*80,y:innerHeight*.45,vx:(Math.random()-.5)*14,vy:-Math.random()*14-4,r:5+Math.random()*5,c:cols[i%cols.length],rot:Math.random()*6,vr:(Math.random()-.5)*.4,life:0,round:Math.random()<.4});
+  if(!running){running=true;requestAnimationFrame(tick)}
+}
+function tick(){
+  cx.clearRect(0,0,innerWidth,innerHeight);
+  parts=parts.filter(p=>p.life<120&&p.y<innerHeight+30);
+  parts.forEach(p=>{p.life++;p.vy+=.38;p.vx*=.99;p.x+=p.vx;p.y+=p.vy;p.rot+=p.vr;cx.save();cx.translate(p.x,p.y);cx.rotate(p.rot);cx.fillStyle=p.c;if(p.round){cx.beginPath();cx.arc(0,0,p.r/2,0,7);cx.fill()}else cx.fillRect(-p.r/2,-p.r/4,p.r,p.r/2);cx.restore()});
+  if(parts.length)requestAnimationFrame(tick);else{running=false;cx.clearRect(0,0,innerWidth,innerHeight)}
+}
+
+/* ---------- reset stars ---------- */
+const resetRow=$('#resetRow'),confirmRow=$('#confirmRow');
+$('#resetBtn').onclick=()=>{sfx.click();$('#confirmText').textContent=`Reset all ${pl(stars,'star')} to 0?`;resetRow.hidden=true;confirmRow.hidden=false};
+$('#resetNo').onclick=()=>{sfx.click();confirmRow.hidden=true;resetRow.hidden=false};
+$('#resetYes').onclick=()=>{
+  stars=0;try{localStorage.setItem('lpspace-stars','0')}catch(e){}
+  if(timer.end){timer.base=0;saveTimer()}
+  showStars();sfx.click();confirmRow.hidden=true;resetRow.hidden=false;say('Stars reset. Time for a fresh start!');
+};
+showStars();
+
+/* ---------- play timer ---------- */
+/* The end time is saved, so reloading the page doesn't restart the countdown */
+const timerPill=$('#timerPill'),timerText=$('#timerText'),timesUpBox=$('#timesUp');
+let timer={end:0,base:0,min:0,warned:false},ticker=null,lastBase=0;
+try{const t=JSON.parse(localStorage.getItem('lpspace-timer')||'null');if(t&&t.end>Date.now())timer=t}catch(e){}
+function saveTimer(){try{if(timer.end)localStorage.setItem('lpspace-timer',JSON.stringify(timer));else localStorage.removeItem('lpspace-timer')}catch(e){}}
+const clock=ms=>{const s=Math.max(0,Math.ceil(ms/1000));return Math.floor(s/60)+':'+String(s%60).padStart(2,'0')};
+function setTimer(min,base){
+  timer=min?{end:Date.now()+min*60000,base:base??stars,min,warned:false}:{end:0,base:0,min:0,warned:false};
+  saveTimer();renderTimer();
+}
+function renderTimer(){
+  const on=timer.end>0;
+  timerPill.hidden=!on;document.body.classList.toggle('timing',on);
+  document.querySelectorAll('#timerChips .chip-btn').forEach(b=>b.setAttribute('aria-pressed',String(+b.dataset.min===(on?timer.min:0))));
+  $('#timerStatus').hidden=!on;
+  clearInterval(ticker);
+  if(on){updateTimer();ticker=setInterval(updateTimer,1000)}
+}
+function updateTimer(){
+  const left=timer.end-Date.now();
+  timerText.textContent=clock(left);
+  timerPill.setAttribute('aria-label',`Play time left: ${clock(left)}`);
+  $('#timerStatus').textContent=`${clock(left)} left. Play ends at ${new Date(timer.end).toLocaleTimeString([],{hour:'numeric',minute:'2-digit'})}.`;
+  timerPill.classList.toggle('low',left<=60000);
+  if(left>0&&left<=60000&&!timer.warned){timer.warned=true;saveTimer();say('One minute left!')}
+  if(left<=0)timesUp();
+}
+function timesUp(){
+  const earned=Math.max(0,stars-timer.base);
+  lastBase=timer.base;setTimer(0);stopTimers();
+  $('#tuText').textContent=earned?`You earned ${pl(earned,'star')} this time. Great work!`:'Great exploring today!';
+  $('#cheer').hidden=true;timesUpBox.hidden=false;burst(120);
+  say(`Time's up! ${earned?`You earned ${pl(earned,'star')}. `:''}Well done!`);
+}
+document.querySelectorAll('#timerChips .chip-btn').forEach(b=>b.onclick=()=>{
+  const min=+b.dataset.min;sfx.click();setTimer(min);
+  say(min?`Timer set for ${min} minutes. Have fun!`:'Timer off.');
+});
+$('#tuDone').onclick=()=>{sfx.click();timesUpBox.hidden=true;if(!game.hidden)homeBtn.click()};
+/* Holding for 2 seconds keeps a quick tap from a child from adding time */
+const more=$('#tuMore');let holdT=null;
+more.addEventListener('pointerdown',e=>{
+  e.preventDefault();more.classList.add('holding');
+  holdT=setTimeout(()=>{more.classList.remove('holding');timesUpBox.hidden=true;setTimer(5,lastBase);sfx.yay();say('Five more minutes!')},2000);
+});
+['pointerup','pointerleave','pointercancel'].forEach(ev=>more.addEventListener(ev,()=>{clearTimeout(holdT);more.classList.remove('holding')}));
+more.addEventListener('contextmenu',e=>e.preventDefault());
+renderTimer();
+})();
+</script>
+</body>
+</html>
